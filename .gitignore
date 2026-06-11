@@ -1,0 +1,11 @@
+_boilerplate/
+web/node_modules/
+/web/src
+web/build/dev-bg.png
+web/index.html
+web/package-lock.json
+web/package.json
+web/public/dev-bg.png
+web/tsconfig.json
+web/tsconfig.node.json
+web/vite.config.ts

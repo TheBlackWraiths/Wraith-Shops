@@ -1,0 +1,42 @@
+{
+    "Police_armory": {
+        "inventory": [
+            {
+                "image": "nui://ox_inventory/web/images/WEAPON_PISTOL.png",
+                "name": "WEAPON_PISTOL",
+                "price": 10,
+                "label": "Pistol"
+            },
+            {
+                "image": "nui://ox_inventory/web/images/ammo-9.png",
+                "name": "ammo-9",
+                "price": 10,
+                "label": "9mm"
+            }
+        ],
+        "locations": [
+            {
+                "radius": 0.4,
+                "heading": 120.98860168457033,
+                "type": "zone",
+                "loc": {
+                    "z": 30.68355560302734,
+                    "y": -980.1083984375,
+                    "x": 453.00421142578127
+                },
+                "distance": 2
+            }
+        ],
+        "name": "Police Armory",
+        "jobRestriction": "police",
+        "currency": "money",
+        "groups": "police",
+        "categories": [],
+        "blip": {
+            "scale": 0.8,
+            "id": 52,
+            "colour": 2
+        },
+        "subtitle": "Police Armory"
+    }
+}

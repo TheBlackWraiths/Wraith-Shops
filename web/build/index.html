@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+  <head>
+
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>w-shops</title>
+
+    <script>
+
+      (function () {
+
+        if (typeof window.GetParentResourceName !== 'function') return;
+
+        var root = document.documentElement;
+
+        root.classList.add('nui-game');
+
+
+
+        function isBootstrapStylesheet(href) {
+
+          return /\/(index|style)-[^/]+\.css$/i.test(href) || href.includes('bootstrap');
+
+        }
+
+
+
+        function setUiStylesheetsEnabled(enabled) {
+
+          document.querySelectorAll('link[rel="stylesheet"]').forEach(function (el) {
+
+            var href = el.getAttribute('href') || '';
+
+            if (!isBootstrapStylesheet(href)) {
+
+              el.disabled = !enabled;
+
+              if (enabled) el.media = 'all';
+
+            }
+
+          });
+
+        }
+
+
+
+        function applyTransparentSurface() {
+          document.body.style.setProperty('background', 'transparent', 'important');
+          document.body.style.setProperty('background-color', 'transparent', 'important');
+          root.style.setProperty('background', 'transparent', 'important');
+          root.style.setProperty('background-color', 'transparent', 'important');
+
+          var appRoot = document.getElementById('root');
+          if (appRoot) {
+            appRoot.style.setProperty('background', 'transparent', 'important');
+            appRoot.style.setProperty('background-color', 'transparent', 'important');
+          }
+        }
+
+        function resetSurface() {
+          document.body.className = '';
+          document.body.removeAttribute('style');
+          applyTransparentSurface();
+        }
+
+
+
+        window.addEventListener('message', function (event) {
+
+          var msg = event.data;
+
+          if (!msg || !msg.action) return;
+
+          if (msg.action === 'setVisible') {
+
+            if (msg.data) {
+
+              root.classList.add('nui-open');
+
+              setUiStylesheetsEnabled(true);
+
+              applyTransparentSurface();
+
+            } else {
+
+              root.classList.remove('nui-open');
+
+              setUiStylesheetsEnabled(false);
+
+              resetSurface();
+
+            }
+
+          }
+
+          if (msg.action === 'setUiHidden') {
+            if (msg.data) {
+              root.classList.remove('nui-open');
+              setUiStylesheetsEnabled(false);
+            } else {
+              root.classList.add('nui-open');
+              setUiStylesheetsEnabled(true);
+              applyTransparentSurface();
+            }
+          }
+
+          if (msg.action === 'openView') {
+
+            root.classList.add('nui-open');
+
+            setUiStylesheetsEnabled(true);
+
+            applyTransparentSurface();
+
+          }
+
+        });
+
+      })();
+
+    </script>
+
+    <script type="module" crossorigin src="./assets/index-8gfucH2y.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/style-Cb0WtzAu.css">
+  </head>
+
+  <body>
+
+    <div id="root"></div>
+
+
+  </body>
+
+</html>
+
+
