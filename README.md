@@ -19,6 +19,16 @@ Built with **React**, **Tailwind CSS**, **ox_lib**, **ox_inventory**, and **ox_t
 - The UI was made with radix-ui, lucide-react, base-ui, framer-motion and i used https://github.com/project-error/fivem-react-boilerplate-lua as a base
 - Backend was me and 2 friends and we are activly maintaining it
 - we currently ownly support QBX and OX inventory
+- This IS HEAVLY INSPIRED BY LATION SHOPS https://lationscripts.com/product/shops-creator
+
+### Timeline
+
+- Convert the Json to SQL
+- Probably redo the ui see if my OCD kills me
+- Create a certification requirement option
+- Create a item requirement option
+- Optimize my code
+- Secure it
 
 ### Player shop
 
@@ -86,30 +96,22 @@ Setting persists per client via resource KVP.
 1. Place the resource in your server resources folder:
 
    ```
-   resources/[standalone]/w-shops
+   resources/[standalone]/wraith-shops
    ```
 
-2. Build the NUI (required before first start):
-
-   ```bash
-   cd web
-   npm install
-   npm run build
-   ```
-
-3. Add to `server.cfg` (after dependencies):
+2. Add to `server.cfg` (after dependencies):
 
    ```cfg
    ensure ox_lib
    ensure ox_inventory
    ensure ox_target
    ensure qbx_core
-   ensure w-shops
+   ensure wraith-shops
    ```
 
-4. Configure `config/shared.lua` (see below).
+3. Configure `config/shared.lua` (see below).
 
-5. Restart the server or run `ensure w-shops`.
+4. Restart the server or run `ensure w-shops`.
 
 > Shops are stored in `data/shops.json`. The manager creates and updates this file automatically.
 
