@@ -1,2 +1,376 @@
-<img width="1333" height="798" alt="Screenshot 2026-06-10 235341" src="https://github.com/user-attachments/assets/2197fa10-13a9-4d40-b5e0-57b374300569" />
-<img width="1340" height="832" alt="Screenshot 2026-06-10 235050" src="https://github.com/user-attachments/assets/04cf101c-803c-48df-a0b0-1d4ffd0f5085" />
+<img width="1333" height="798" alt="Shop Manager" src="https://github.com/user-attachments/assets/2197fa10-13a9-4d40-b5e0-57b374300569" />
+<img width="1340" height="832" alt="Player Shop UI" src="https://github.com/user-attachments/assets/04cf101c-803c-48df-a0b0-1d4ffd0f5085" />
+
+# w-shops
+
+A modern NUI shop system for **Qbox** with a full in-game **Shop Manager**. Create shops, place locations in the world, manage inventory, categories, permissions, and blips — all without touching code.
+
+Built with **React**, **Tailwind CSS**, **ox_lib**, **ox_inventory**, and **ox_target**.
+
+---
+
+## Features
+
+### Player shop
+- Clean card-based shop UI with categories, cart, and purchase flow
+- Item images from ox_inventory with icon fallback
+- Tooltips, stock limits, job/license restrictions per item
+- Multi-currency support (`money`, `bank`, custom ox_inventory items)
+- Operating hours (open/close times)
+- Shop-level and location-level job restrictions
+
+### Shop Manager (`/shopmanager`)
+- Create, edit, and delete shops from an in-game panel
+- **General** — name, subtitle, currency, shop ID (new shops)
+- **Locations** — zone, ped, or prop-based interaction points
+- **Items** — add, edit, bulk import, drag-to-reorder inventory
+- **Permissions** — job restrictions with grade controls
+- **Settings** — map blip, random prices (config), item categories
+- **Save Shop** button appears only when changes are detected
+- **Debug zones** toggle on the main manager list (global, per-client)
+
+### Location types
+| Type | Description |
+|------|-------------|
+| **Zone** | Sphere ox_target zone at a world position (radius-based) |
+| **Ped** | Spawns a ped with ox_target when player is nearby |
+| **Model** | Targets a specific prop model, or spawns one at coords |
+
+### Zone placement
+- ox_lib TextUI instructions
+- Sphere preview snapped to raycast ground hit
+- **Scroll** — resize radius (0.1m, Shift+Scroll = 0.5m)
+- **1 / 2 / 3** — Small (1.0m), Normal (1.5m), Large (2.5m) presets
+- **E** confirm · **ESC** cancel
+
+### Debug mode
+Enable **Debug zones** on the Shop Manager home screen to:
+- Show ox_target zone outlines for all shops (client-side)
+- Log verbose output to F8 (`[w-shops:debug]`)
+- Log NUI requests/responses in the browser console (F12)
+
+Setting persists per client via resource KVP.
+
+---
+
+## Requirements
+
+| Resource | Purpose |
+|----------|---------|
+| [ox_lib](https://github.com/overextended/ox_lib) | UI, callbacks, zones, placement |
+| [ox_inventory](https://github.com/overextended/ox_inventory) | Items, images, currency |
+| [ox_target](https://github.com/overextended/ox_target) | Shop interaction zones/entities |
+| [qbx_core](https://github.com/Qbox-project/qbx_core) | Player data, jobs, money |
+
+**Also required:** Node.js 18+ (to build the NUI)
+
+---
+
+## Installation
+
+1. Place the resource in your server resources folder:
+   ```
+   resources/[standalone]/w-shops
+   ```
+
+2. Build the NUI (required before first start):
+   ```bash
+   cd web
+   npm install
+   npm run build
+   ```
+
+3. Add to `server.cfg` (after dependencies):
+   ```cfg
+   ensure ox_lib
+   ensure ox_inventory
+   ensure ox_target
+   ensure qbx_core
+   ensure w-shops
+   ```
+
+4. Configure `config/shared.lua` (see below).
+
+5. Restart the server or run `ensure w-shops`.
+
+> Shops are stored in `data/shops.json`. The manager creates and updates this file automatically.
+
+---
+
+## Configuration
+
+Edit `config/shared.lua`:
+
+```lua
+return {
+    useOxInventory = true,
+    imagePath = 'nui://ox_inventory/web/images/%s.png',
+    defaultCurrency = 'money',
+    currencyLabels = {
+        money = 'Cash',
+        black_money = 'Dirty Money',
+    },
+
+    manager = {
+        command = 'shopmanager',           -- Command to open Shop Manager
+        groupPermission = 'group.admin',   -- ACE permission
+        acePermission = 'w-shops.manage',  -- Optional ACE fallback
+        allowAll = true,                   -- Set false on live servers
+    },
+}
+```
+
+### Manager permissions
+
+| Setting | Description |
+|---------|-------------|
+| `allowAll` | `true` = anyone can open the manager (dev only) |
+| `groupPermission` | ACE group check (e.g. `group.admin`) |
+| `acePermission` | Additional ACE permission string |
+
+When `allowAll` is `false`, players need admin/god group or a matching ACE permission.
+
+### Convar debug (optional)
+
+```cfg
+setr w-shops-debugMode 1
+```
+
+Enables `debugPrint()` output independent of the in-game Debug zones toggle.
+
+---
+
+## Usage
+
+### Shop Manager
+```
+/shopmanager
+```
+
+1. **Create Shop** — set a unique shop ID, name, and settings
+2. Add **locations** using the crosshair placement tool
+3. Add **items** individually or via **Bulk Import** from ox_inventory
+4. Organize items into **categories** under Settings
+5. Click **Save Shop** in the header when it appears
+
+### Opening a shop (exports / events)
+
+```lua
+-- Client export
+exports['w-shops']:OpenShop('shop_id', locationIndex)
+
+-- Or trigger the event directly
+TriggerEvent('w-shops:client:openShop', 'shop_id', 1)
+```
+
+### Manager exports
+
+```lua
+exports['w-shops']:OpenShopManager()
+exports['w-shops']:CloseShopManager()
+```
+
+### Server export (runtime shop registration)
+
+```lua
+exports['w-shops']:RegisterShop('dynamic_shop', {
+    name = 'Dynamic Shop',
+    inventory = { { name = 'water', price = 5 } },
+    locations = { ... },
+})
+```
+
+### Placement export
+
+```lua
+local result = exports['w-shops']:StartLocationPlacement({
+    type = 'zone',   -- 'zone' | 'model'
+    radius = 1.5,    -- zone only
+    model = 'prop_vend_soda_02', -- model only
+})
+-- result: { success, x, y, z, w, radius? }
+```
+
+---
+
+## Data format (`data/shops.json`)
+
+Shops are keyed by ID. Example:
+
+```json
+{
+  "Police_armory": {
+    "name": "Police Armory",
+    "subtitle": "Police Armory",
+    "currency": "money",
+    "categories": [],
+    "inventory": [
+      {
+        "name": "WEAPON_PISTOL",
+        "label": "Pistol",
+        "price": 10,
+        "image": "nui://ox_inventory/web/images/WEAPON_PISTOL.png"
+      }
+    ],
+    "locations": [
+      {
+        "type": "zone",
+        "loc": { "x": 453.0, "y": -980.1, "z": 30.68 },
+        "heading": 121.0,
+        "radius": 1.5,
+        "distance": 2
+      }
+    ],
+    "jobRestriction": "police",
+    "blip": { "id": 52, "colour": 2, "scale": 0.8 }
+  }
+}
+```
+
+### Location fields
+
+**Zone (sphere)**
+```json
+{
+  "type": "zone",
+  "loc": { "x": 0, "y": 0, "z": 0 },
+  "heading": 0,
+  "radius": 1.5,
+  "distance": 2
+}
+```
+
+**Zone (legacy box)** — still supported
+```json
+{
+  "type": "zone",
+  "loc": { "x": 0, "y": 0, "z": 0 },
+  "length": 1.5,
+  "width": 1.5,
+  "minZ": -1,
+  "maxZ": 2,
+  "heading": 0
+}
+```
+
+**Ped**
+```json
+{
+  "type": "ped",
+  "coords": { "x": 0, "y": 0, "z": 0, "w": 0 },
+  "model": "mp_m_shopkeep_01",
+  "scenario": "WORLD_HUMAN_AA_COFFEE",
+  "distance": 2
+}
+```
+
+**Model / prop**
+```json
+{
+  "type": "model",
+  "coords": { "x": 0, "y": 0, "z": 0, "w": 0 },
+  "models": ["prop_vend_soda_02"],
+  "distance": 2
+}
+```
+
+### Item fields
+
+| Field | Description |
+|-------|-------------|
+| `name` | ox_inventory item name (required) |
+| `price` | Purchase price |
+| `count` | Stock limit (omit for unlimited) |
+| `category` | Category tab name |
+| `label` / `description` / `image` | UI overrides |
+| `metadata` | Passed to ox_inventory on purchase |
+| `license` | Required license(s) |
+| `jobRestriction` | Per-item job lock |
+
+---
+
+## Development
+
+### Web UI
+
+```bash
+cd web
+npm install
+npm run start        # Vite dev server (browser preview)
+npm run start:game   # Watch build for in-game testing
+npm run build        # Production build → web/build/
+```
+
+After building, restart the resource:
+```
+restart w-shops
+```
+
+### Project structure
+
+```
+w-shops/
+├── client/
+│   ├── main.lua          # Shop open flow
+│   ├── manager.lua       # Shop Manager NUI callbacks
+│   ├── targets.lua       # ox_target zones, peds, props
+│   ├── placement.lua     # In-world zone/prop placement
+│   ├── nui.lua           # Shop NUI + purchase callback
+│   ├── debug.lua         # Global debug mode
+│   ├── bridge.lua        # Qbox / ox_inventory bridge
+│   └── shops.lua         # Client shop cache
+├── server/
+│   ├── main.lua          # Purchase + getShopData
+│   ├── manager.lua       # Manager save/delete/validation
+│   ├── registry.lua      # Shop registry
+│   ├── storage.lua       # shops.json read/write
+│   └── bridge.lua        # Server-side bridge
+├── shared/
+│   ├── locations.lua     # Location normalization
+│   └── hours.lua         # Operating hours logic
+├── config/
+│   └── shared.lua        # Main configuration
+├── data/
+│   └── shops.json        # Persisted shop data
+└── web/
+    ├── src/              # React source
+    └── build/            # Compiled NUI (committed / deployed)
+```
+
+### Tech stack (NUI)
+- React 19 + TypeScript
+- Tailwind CSS 4
+- Radix UI + Framer Motion + Lucide icons
+- Vite
+
+---
+
+## Notes
+
+- **Random prices** — Settings are saved to `shops.json`, but price randomization is not yet applied when the server starts or when a player opens a shop.
+- **Legacy box zones** — Older shops using `length` / `width` / `minZ` / `maxZ` still work. New placements use sphere `radius` zones.
+
+---
+
+## Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| Blank / missing UI | Run `npm run build` in `web/` and restart the resource |
+| `module 'client.debug' not found` | Ensure `client/debug.lua` is listed under `files` in `fxmanifest.lua` |
+| Manager won't open | Check `allowAll` or ACE permissions in `config/shared.lua` |
+| Zone not interactable | Enable **Debug zones** to verify placement; re-save location if coords are missing |
+| Items have no image | Confirm item exists in ox_inventory; check `imagePath` in config |
+| Changes not saving | Click **Save Shop** in the editor header (only visible when changes exist) |
+
+---
+
+## License
+
+See repository license. Third-party dependencies (ox_lib, ox_inventory, etc.) are subject to their own licenses.
+
+---
+
+## Credits
+
+**Author:** Wraith
